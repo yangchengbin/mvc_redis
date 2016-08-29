@@ -27,4 +27,8 @@ public class PersonService {
     public Person getPersonById(int id) {
         return personDao.getPersonById(id);
     }
+
+    public boolean testMsgPack( ) {
+        return personDao.testMsgPack();
+    }
 }

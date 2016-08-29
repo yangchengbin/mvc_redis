@@ -16,11 +16,12 @@ public class PipelineTest {
     public static void main(String[] args) {
     }
 
-    private void withoutPipeline() {
+    @Test
+    public void withoutPipeline() {
         Jedis jr = null;
         try {
             jr = new Jedis("115.28.100.160", 6379);
-            Map<String, String> map = jr.hgetAll("1");
+            Map<String, String> map = jr.hgetAll("person");
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 System.out.println(entry.getKey() + "-----------" + entry.getValue());
             }
@@ -33,7 +34,7 @@ public class PipelineTest {
         }
     }
 
-    private void usePipeline() {
+    public void usePipeline() {
         Jedis jr = null;
         try {
             jr = new Jedis("115.28.100.160", 6379);
@@ -56,8 +57,9 @@ public class PipelineTest {
         Jedis jr = null;
         try {
             jr = new Jedis("115.28.100.160", 6379);
+            long  start = System.currentTimeMillis();
             Set<Tuple> set = jr.zrangeByScoreWithScores("names", 110, 111);//没有值也不为null size=0
-            System.out.println(set);
+            System.out.println(System.currentTimeMillis() - start);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

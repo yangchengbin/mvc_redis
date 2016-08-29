@@ -2,6 +2,7 @@ package com.yx.dao;
 
 import com.yx.bean.Person;
 import org.apache.commons.beanutils.BeanUtils;
+import org.msgpack.MessagePack;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
@@ -18,6 +19,8 @@ public class PersonDao {
 
     @Resource
     private StringRedisTemplate redsTemplate;
+
+    protected static final MessagePack msgPack = new MessagePack();
 
     public boolean addPerson(final Person person) {
         boolean result = redsTemplate.execute(new RedisCallback<Boolean>() {
@@ -101,5 +104,28 @@ public class PersonDao {
 
     public Boolean exists(final int key) {
         return redsTemplate.hasKey(String.valueOf(key));
+    }
+
+    public boolean testMsgPack() {
+        Boolean result = redsTemplate.execute(new RedisCallback<Boolean>() {
+            public Boolean doInRedis(RedisConnection connection) throws DataAccessException {
+                try {
+                    RedisSerializer<String> serializer = redsTemplate.getStringSerializer();
+                    byte[] key = serializer.serialize(String.valueOf("person"));
+                    Map<byte[], byte[]> map = connection.hGetAll(key);
+                    Person p = new Person();
+                    for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
+                        String k = serializer.deserialize(entry.getKey());
+                        String v = serializer.deserialize(entry.getValue() );
+                        BeanUtils.setProperty(p, k, v);
+                    }
+                    System.out.println(p);
+                    return true;
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+        });
+        return result;
     }
 }

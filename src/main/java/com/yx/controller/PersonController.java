@@ -58,4 +58,12 @@ public class PersonController {
         }
         return GenResult.FAILED.genResult();
     }
+
+    //test: /person/testMsgPack.do
+    @RequestMapping(value = "testMsgPack")
+    @ResponseBody
+    public Map<String, Object> testMsgPack( ) {
+        boolean result = personService.testMsgPack();
+        return GenResult.SUCCESS.genResult(result);
+    }
 }

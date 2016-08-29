@@ -1,9 +1,12 @@
 package com.yx.test;
 
+import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Tuple;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 利用管道 大大提高了执行效率 count不是越大越好
@@ -11,10 +14,9 @@ import java.util.Map;
 public class PipelineTest {
 
     public static void main(String[] args) {
-        withoutPipeline();
     }
 
-    private static void withoutPipeline() {
+    private void withoutPipeline() {
         Jedis jr = null;
         try {
             jr = new Jedis("115.28.100.160", 6379);
@@ -31,15 +33,31 @@ public class PipelineTest {
         }
     }
 
-    private static void usePipeline(int count) {
+    private void usePipeline() {
         Jedis jr = null;
         try {
             jr = new Jedis("115.28.100.160", 6379);
             Pipeline pl = jr.pipelined();
-            for (int i = 0; i < count; i++) {
+            for (int i = 0; i < 100; i++) {
                 pl.incr("key2");
             }
             pl.sync();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (jr != null) {
+                jr.disconnect();
+            }
+        }
+    }
+
+    @Test
+    public void testRange() {
+        Jedis jr = null;
+        try {
+            jr = new Jedis("115.28.100.160", 6379);
+            Set<Tuple> set = jr.zrangeByScoreWithScores("names", 110, 111);//没有值也不为null size=0
+            System.out.println(set);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

@@ -1,10 +1,14 @@
 package com.yx.test;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Tuple;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,31 +17,28 @@ import java.util.Set;
  */
 public class PipelineTest {
 
-    public static void main(String[] args) {
+    Jedis jr;
+
+    @Before
+    public void init() {
+        jr = new Jedis("115.28.100.160", 6379);
     }
 
     @Test
-    public void withoutPipeline() {
-        Jedis jr = null;
+    public void testGetAll() {
         try {
-            jr = new Jedis("115.28.100.160", 6379);
             Map<String, String> map = jr.hgetAll("person");
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 System.out.println(entry.getKey() + "-----------" + entry.getValue());
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (jr != null) {
-                jr.disconnect();
-            }
         }
     }
 
-    public void usePipeline() {
-        Jedis jr = null;
+    @Test
+    public void testPipeline() {
         try {
-            jr = new Jedis("115.28.100.160", 6379);
             Pipeline pl = jr.pipelined();
             for (int i = 0; i < 100; i++) {
                 pl.incr("key2");
@@ -45,27 +46,34 @@ public class PipelineTest {
             pl.sync();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (jr != null) {
-                jr.disconnect();
-            }
         }
     }
 
     @Test
-    public void testRange() {
-        Jedis jr = null;
+    public void testZrByScoreWithScores() {//存在临界值时用此方法
         try {
-            jr = new Jedis("115.28.100.160", 6379);
-            long  start = System.currentTimeMillis();
-            Set<Tuple> set = jr.zrangeByScoreWithScores("names", 110, 111);//没有值也不为null size=0
-            System.out.println(System.currentTimeMillis() - start);
+            int count = 5;
+            Set<Tuple> set = jr.zrangeByScoreWithScores("namese", 0, 6, 0, count);
+            if (set.size() == 0) {
+                return;
+            } else if (set.size() == count) {
+                List<Tuple> list = new ArrayList<Tuple>(set);
+                double tmp = list.get(list.size() - 1).getScore();
+
+                Set<Tuple> setMore = jr.zrangeByScoreWithScores("names", tmp, tmp);
+                jr.zremrangeByScore("names",0,tmp);
+                set.addAll(setMore);
+            }
+            for (Tuple t : set) {
+                System.out.println(t.getScore() + "---------" + t.getElement());
+            }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (jr != null) {
-                jr.disconnect();
-            }
         }
+    }
+
+    @After
+    public void after() {
+        jr.disconnect();
     }
 }

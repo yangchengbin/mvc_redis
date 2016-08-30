@@ -53,7 +53,7 @@ public class PipelineTest {
     public void testZrByScoreWithScores() {//存在临界值时用此方法
         try {
             int count = 5;
-            Set<Tuple> set = jr.zrangeByScoreWithScores("namese", 0, 6, 0, count);
+            Set<Tuple> set = jr.zrangeByScoreWithScores("names", 0, 6, 0, count);
             if (set.size() == 0) {
                 return;
             } else if (set.size() == count) {

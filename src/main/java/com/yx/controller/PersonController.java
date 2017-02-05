@@ -66,4 +66,11 @@ public class PersonController {
         boolean result = personService.testMsgPack();
         return GenResult.SUCCESS.genResult(result);
     }
+
+    @RequestMapping(value = "/cache/status")
+    @ResponseBody
+    public Map<String, Object> cacheStatus( ) {
+        boolean result = personService.testMsgPack();
+        return GenResult.SUCCESS.genResult(result);
+    }
 }

@@ -1,7 +1,9 @@
 package com.yx.bean;
 
-import java.io.Serializable;
+import org.msgpack.annotation.Message;
 
+import java.io.Serializable;
+@Message
 public class Person implements Serializable {
     private int id;
     private String name;

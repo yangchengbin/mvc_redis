@@ -22,6 +22,8 @@ public class PersonDao {
 
     protected static final MessagePack msgPack = new MessagePack();
 
+    public static final byte[] CHANNEL_PERSON = "channel_person".getBytes();
+
     public boolean addPerson(final Person person) {
         boolean result = redsTemplate.execute(new RedisCallback<Boolean>() {
             public Boolean doInRedis(RedisConnection connection) throws DataAccessException {
@@ -38,6 +40,7 @@ public class PersonDao {
                     connection.hMSet(key, map);
                     //connection.expire(key, 30);//设置有效时间（秒）超过时间自动删除 默认永久 30秒
                     //connection.expireAt(key, System.currentTimeMillis() / 1000 + 30);//设置有效时间（秒）超过时间自动删除 默认永久30秒
+                    connection.publish(CHANNEL_PERSON, "add person".getBytes());//发布订阅消息
                 } catch (Exception e) {
                     return false;
                 }
@@ -116,7 +119,7 @@ public class PersonDao {
                     Person p = new Person();
                     for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
                         String k = serializer.deserialize(entry.getKey());
-                        String v = serializer.deserialize(entry.getValue() );
+                        String v = serializer.deserialize(entry.getValue());
                         BeanUtils.setProperty(p, k, v);
                     }
                     System.out.println(p);

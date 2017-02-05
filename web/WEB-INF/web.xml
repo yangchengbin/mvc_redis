@@ -17,6 +17,9 @@
     <listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
     </listener>
+    <listener>
+        <listener-class>com.yx.listener.PubSubListener</listener-class>
+    </listener>
 
     <servlet>
         <servlet-name>mvc-servlet</servlet-name>

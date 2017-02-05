@@ -1,16 +1,17 @@
 package com.yx.test;
 
+import com.yx.bean.Person;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.msgpack.MessagePack;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.Tuple;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 利用管道 大大提高了执行效率 count不是越大越好
@@ -18,21 +19,15 @@ import java.util.Set;
 public class PipelineTest {
 
     Jedis jr;
+    List<Person> persons = new ArrayList<Person>();
+    MessagePack messagePack = new MessagePack();
+    Map<byte[], byte[]> map;
 
     @Before
     public void init() {
-        jr = new Jedis("115.28.100.160", 6379);
-    }
-
-    @Test
-    public void testGetAll() {
-        try {
-            Map<String, String> map = jr.hgetAll("person");
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                System.out.println(entry.getKey() + "-----------" + entry.getValue());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        jr = new Jedis("192.168.10.156", 6379);
+        for (int i = 0; i < 100000; i++) {
+            persons.add(new Person(i, "name" + i, "address" + i));
         }
     }
 
@@ -40,8 +35,8 @@ public class PipelineTest {
     public void testPipeline() {
         try {
             Pipeline pl = jr.pipelined();
-            for (int i = 0; i < 100; i++) {
-                pl.incr("key2");
+            for (int i = 0; i < persons.size(); i++) {
+                pl.set(messagePack.write("person" + i), messagePack.write(persons.get(i)));
             }
             pl.sync();
         } catch (Exception e) {
@@ -50,23 +45,17 @@ public class PipelineTest {
     }
 
     @Test
-    public void testZrByScoreWithScores() {//存在临界值时用此方法
+    public void testPipeline2() {
         try {
-            int count = 5;
-            Set<Tuple> set = jr.zrangeByScoreWithScores("names", 0, 6, 0, count);
-            if (set.size() == 0) {
-                return;
-            } else if (set.size() == count) {
-                List<Tuple> list = new ArrayList<Tuple>(set);
-                double tmp = list.get(list.size() - 1).getScore();
-
-                Set<Tuple> setMore = jr.zrangeByScoreWithScores("names", tmp, tmp);
-                jr.zremrangeByScore("names",0,tmp);
-                set.addAll(setMore);
+            Pipeline pl = jr.pipelined();
+            for (int i = 0; i < persons.size(); i++) {
+                map = new HashMap<byte[], byte[]>();
+                map.put("id".getBytes(), String.valueOf(persons.get(i).getId()).getBytes());
+                map.put("name".getBytes(), persons.get(i).getName().getBytes());
+                map.put("address".getBytes(), persons.get(i).getAddress().getBytes());
+                pl.hmset(messagePack.write("person" + i), map);
             }
-            for (Tuple t : set) {
-                System.out.println(t.getScore() + "---------" + t.getElement());
-            }
+            pl.sync();
         } catch (Exception e) {
             e.printStackTrace();
         }

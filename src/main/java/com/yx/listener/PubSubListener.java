@@ -1,12 +1,9 @@
 package com.yx.listener;
 
-import com.yx.common.RedsPubSub;
 import redis.clients.jedis.Jedis;
 
-import javax.annotation.Resource;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 
 /**
  * User: LiWenC
@@ -19,9 +16,15 @@ public class PubSubListener implements ServletContextListener {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Jedis jr = new Jedis("192.168.10.156", 6379, 0);
-                RedsPubSub redsPubSub = new RedsPubSub();
-                redsPubSub.proceed(jr.getClient(), "channel_person");
+                Jedis jr = new Jedis("192.168.1.125", 6379, 0);
+                jr.auth("root");
+
+              /*  RedsPubSub redsPubSub = new RedsPubSub();
+                redsPubSub.proceed(jr.getClient(), "channel_person");*/
+                //key失效监听机制
+                RedsMsgPubSubListener listener = new RedsMsgPubSubListener();
+                jr.subscribe(listener, "__keyevent@0__:expired");
+                //key失效监听机制
             }
         });
         thread.start();

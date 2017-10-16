@@ -38,8 +38,8 @@ public class PersonDao {
                         }
                     }
                     connection.hMSet(key, map);
-                    connection.expire(key, 10);//设置有效时间（秒）超过时间自动删除 默认永久 30秒
-//                    connection.expireAt(key, System.currentTimeMillis() / 1000 + 30);//设置有效时间（秒）超过时间自动删除 默认永久30秒
+//                    connection.expire(key, 10);//设置有效时间（秒）超过时间自动删除 默认永久 30秒
+                    connection.expireAt(key, System.currentTimeMillis() / 1000 + 10);//设置有效时间（秒）超过时间自动删除 默认永久30秒
 //                    connection.publish(CHANNEL_PERSON, "add person".getBytes());//发布订阅消息
                 } catch (Exception e) {
                     return false;
